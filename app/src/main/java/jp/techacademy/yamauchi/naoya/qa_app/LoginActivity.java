@@ -8,7 +8,6 @@ import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.view.inputmethod.InputMethod;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -64,7 +63,7 @@ public class LoginActivity extends AppCompatActivity {
                 } else {
                     //失敗時はエラーを表示
                     View view = findViewById(android.R.id.content);
-                    Snackbar.make(view, "アカウント作成に失敗しました",Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, "アカウント作成に失敗しました", Snackbar.LENGTH_LONG).show();
 
                     mProgress.dismiss();
                 }
@@ -75,7 +74,7 @@ public class LoginActivity extends AppCompatActivity {
         mLoginListener = new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(Task<AuthResult> task) {
-                if(task.isSuccessful()){
+                if (task.isSuccessful()) {
                     //成功した場合
                     FirebaseUser user = mAuth.getCurrentUser();
                     DatabaseReference userRef = mDatabaseReference.child(Const.UsersPATH).child(user.getUid());
@@ -85,16 +84,15 @@ public class LoginActivity extends AppCompatActivity {
                         String name = mNameEditText.getText().toString();
 
                         Map<String, String> data = new HashMap<String, String>();
-                        data.put("name",name);
+                        data.put("name", name);
                         userRef.setValue(data);
                         saveName(name);
-                    }
-                    else {
+                    } else {
                         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot snapshot) {
                                 Map data = snapshot.getValue(Map.class);
-                                saveName((String)data.get("name"));
+                                saveName((String) data.get("name"));
                             }
 
                             @Override
@@ -106,11 +104,10 @@ public class LoginActivity extends AppCompatActivity {
                     //ダイアログを非表示にする
                     mProgress.dismiss();
                     finish();
-                }
-                else{
+                } else {
                     //失敗した場合はエラー
                     View view = findViewById(android.R.id.content);
-                    Snackbar.make(view,"ログインに失敗しました",Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, "ログインに失敗しました", Snackbar.LENGTH_LONG).show();
 
                     mProgress.dismiss();
                 }
@@ -120,77 +117,77 @@ public class LoginActivity extends AppCompatActivity {
         //UIの準備
         setTitle("ログイン");
 
-        mEmailEditText = (EditText)findViewById(R.id.emailText);
-        mPasswordEditText = (EditText)findViewById(R.id.passwordText);
-        mNameEditText =(EditText)findViewById(R.id.nameText);
+        mEmailEditText = (EditText) findViewById(R.id.emailText);
+        mPasswordEditText = (EditText) findViewById(R.id.passwordText);
+        mNameEditText = (EditText) findViewById(R.id.nameText);
 
         mProgress = new ProgressDialog(this);
         mProgress.setMessage("処理中…");
 
-        Button createButton = (Button)findViewById(R.id.createButton);
-        createButton.setOnClickListener(new View.OnClickListener(){
+        Button createButton = (Button) findViewById(R.id.createButton);
+        createButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //キーボードが出ていたら閉じる
-                InputMethodManager im = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                im.hideSoftInputFromWindow(v.getWindowToken(),InputMethodManager.HIDE_NOT_ALWAYS);
+                InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                im.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 
                 String email = mEmailEditText.getText().toString();
                 String password = mPasswordEditText.getText().toString();
                 String name = mNameEditText.getText().toString();
 
-                if(email.length()!= 0 && password.length()>=6&&name.length()!=0){
-                    mIsCreateAccount =true;
-                    createAccount(email,password);
-                }
-                else{
-                    Snackbar.make(v,"正しく入力してください",Snackbar.LENGTH_LONG).show();
+                if (email.length() != 0 && password.length() >= 6 && name.length() != 0) {
+                    mIsCreateAccount = true;
+                    createAccount(email, password);
+                } else {
+                    Snackbar.make(v, "正しく入力してください", Snackbar.LENGTH_LONG).show();
 
                 }
             }
         });
 
-        Button loginButton = (Button)findViewById(R.id.loginButton);
+        Button loginButton = (Button) findViewById(R.id.loginButton);
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                InputMethodManager im = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                im.hideSoftInputFromWindow(v.getWindowToken(),InputMethodManager.HIDE_NOT_ALWAYS);
+                InputMethodManager im = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                im.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
 
                 String email = mEmailEditText.getText().toString();
                 String password = mPasswordEditText.getText().toString();
 
-                if(email.length() != 0&& password.length()>=6){
+                if (email.length() != 0 && password.length() >= 6) {
                     //フラグを落とす
                     mIsCreateAccount = false;
-                    login(email,password);
-                }
-                else{
-                    Snackbar.make(v,"正しく入力してください",Snackbar.LENGTH_LONG).show();
+                    login(email, password);
+                } else {
+                    Snackbar.make(v, "正しく入力してください", Snackbar.LENGTH_LONG).show();
 
                 }
             }
         });
     }
 
-    private void createAccount(String email,String password){
+    private void createAccount(String email, String password) {
         //プログレスダイアログの表示
         mProgress.show();
 
         //アカウント作成
         mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(mCreateAccountListener);
     }
-    private void login(String email,String password){
+
+    private void login(String email, String password) {
         mProgress.show();
 
         //ログイン
-        mAuth.signInWithEmailAndPassword(email,password).addOnCompleteListener(mLoginListener);
+        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(mLoginListener);
     }
-    private  void saveName(String name){
+
+    private void saveName(String name) {
         //Preferenceに保存
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sp.edit();
-        editor.putString(Const.NameKEY,name);
+        editor.putString(Const.NameKEY, name);
         editor.commit();
     }
 }

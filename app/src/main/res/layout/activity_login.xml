@@ -35,15 +35,13 @@
         android:layout_marginTop="4dp"
         android:text="ログイン"
         android:id="@+id/loginButton"
-        android:background="@drawable/custom_button"
-        android:textColor="@color/colorButtonText"/>
+        android:background="@drawable/custom_button"/>
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="アカウント作成"
         android:id="@+id/createButton"
-        android:background="@drawable/custom_button"
-        android:textColor="@color/colorButtonText"/>
+        android:background="@drawable/custom_button"/>
 
 </LinearLayout>
