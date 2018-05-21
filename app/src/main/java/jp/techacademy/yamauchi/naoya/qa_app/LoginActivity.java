@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -55,6 +56,7 @@ public class LoginActivity extends AppCompatActivity {
         mCreateAccountListener = new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(Task<AuthResult> task) {
+                Log.d("ERROR", task.getResult().toString());
                 if (task.isSuccessful()) {
                     //成功時、ログインを行う
                     String email = mEmailEditText.getText().toString();
@@ -74,6 +76,7 @@ public class LoginActivity extends AppCompatActivity {
         mLoginListener = new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(Task<AuthResult> task) {
+                Log.d("ERROR", task.getResult().toString());
                 if (task.isSuccessful()) {
                     //成功した場合
                     FirebaseUser user = mAuth.getCurrentUser();
@@ -173,7 +176,7 @@ public class LoginActivity extends AppCompatActivity {
         mProgress.show();
 
         //アカウント作成
-        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(mCreateAccountListener);
+        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(mCreateAccountListener);
     }
 
     private void login(String email, String password) {
