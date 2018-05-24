@@ -94,7 +94,7 @@ public class LoginActivity extends AppCompatActivity {
                         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot snapshot) {
-                                Map data = snapshot.getValue(Map.class);
+                                Map data = (Map<String, Object>) snapshot.getValue();
                                 saveName((String) data.get("name"));
                             }
 

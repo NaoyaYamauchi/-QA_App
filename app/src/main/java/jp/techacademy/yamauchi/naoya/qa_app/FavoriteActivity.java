@@ -1,11 +1,8 @@
 package jp.techacademy.yamauchi.naoya.qa_app;
 
-
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -30,21 +27,51 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
-
+public class FavoriteActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private Toolbar mToolbar;
     private int mGenre = 0;
 
     private DatabaseReference mDatabaseReference;
     private DatabaseReference mGenreRef;
     private ListView mListView;
+    private Question mQuestion;
     private ArrayList<Question> mQuestionArrayList;
+    private ArrayList<String> mFavoriteArrayList;
     private QuestionsListAdapter mAdapter;
+
+    private ChildEventListener mFavoriteListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            String favoriteQuestionUid = dataSnapshot.getKey();
+            mFavoriteArrayList.add(favoriteQuestionUid);
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
 
     private ChildEventListener mEventListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            String questionUid = dataSnapshot.getKey();
+
             HashMap map = (HashMap) dataSnapshot.getValue();
             String title = (String) map.get("title");
             String body = (String) map.get("body");
@@ -71,14 +98,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
             Question question = new Question(title, body, name, uid, dataSnapshot.getKey(), mGenre, bytes, answerArrayList);
-            mQuestionArrayList.add(question);
+
+
+            //多分ここに書く
+            for (int i = 0; i < mFavoriteArrayList.size(); i++) {
+                if (mFavoriteArrayList.get(i).equals(questionUid)) {
+                    mQuestionArrayList.add(question);
+                }
+            }
             mAdapter.notifyDataSetChanged();
         }
 
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
             HashMap map = (HashMap) dataSnapshot.getValue();
-
+            
             //変更があったQuestionを探す
             for (Question question : mQuestionArrayList) {
                 if (dataSnapshot.getKey().equals(question.getQuestionUid())) {
@@ -119,36 +153,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_favorite);
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                //ジャンルを選択していない場合はエラー表示
-                if (mGenre == 0) {
-                    Snackbar.make(view, "ジャンルを選択してください", Snackbar.LENGTH_LONG).show();
-                    return;
-                }
-
-                //ログインしているユーザー取得
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
-                //未ログインの場合
-                if (user == null) {
-                    Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-                    startActivity(intent);
-                } else {
-                    //ジャンルを渡して質問作成画面を起動する
-                    Intent intent = new Intent(getApplicationContext(), QuestionsSendActivity.class);
-                    intent.putExtra("genre", mGenre);
-                    startActivity(intent);
-                }
-            }
-        });
         //ナビゲーションドロワーの設定
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, mToolbar, R.string.app_name, R.string.app_name);
@@ -202,32 +210,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
 
         if (id == R.id.action_settings) {
-            try {
-                Log.d("USER", user.getUid());
-                Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
-                startActivity(intent);
-                return true;
-            } catch (NullPointerException e) {
-                Log.d("USER", "null");
-                Snackbar.make(getWindow().getDecorView(), "ログインしてください", Snackbar.LENGTH_SHORT).show();
-            }
+            return true;
         }
-        if (id == R.id.action_favorite) {
-            try {
-                Log.d("USER", user.getUid());
 
-                Intent intent = new Intent(getApplicationContext(), FavoriteActivity.class);
-                startActivity(intent);
-                return true;
-            } catch (NullPointerException e) {
-                Log.d("USER", "null");
-                Snackbar.make(getWindow().getDecorView(), "ログインしてください", Snackbar.LENGTH_SHORT).show();
-            }
-        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -258,6 +245,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mAdapter.setQuestionArrayList(mQuestionArrayList);
         mListView.setAdapter(mAdapter);
 
+        mFavoriteArrayList = new ArrayList<String>();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        DatabaseReference favoriteRef = mDatabaseReference.child(Const.FavoritePATH).child(user.getUid());
+
+        favoriteRef.addChildEventListener(mFavoriteListener);
+
         //選択したジャンルにListenerを登録
         if (mGenreRef != null) {
             mGenreRef.removeEventListener(mEventListener);
@@ -267,4 +260,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         return true;
     }
+
+
 }
