@@ -35,38 +35,10 @@ public class FavoriteActivity extends AppCompatActivity implements NavigationVie
     private DatabaseReference mGenreRef;
     private ListView mListView;
     private Question mQuestion;
+    private boolean mFirst = true;
     private ArrayList<Question> mQuestionArrayList;
     private ArrayList<String> mFavoriteArrayList;
     private QuestionsListAdapter mAdapter;
-
-    private ChildEventListener mFavoriteListener = new ChildEventListener() {
-        @Override
-        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            String favoriteQuestionUid = dataSnapshot.getKey();
-            mFavoriteArrayList.add(favoriteQuestionUid);
-        }
-
-        @Override
-        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-        }
-
-        @Override
-        public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-        }
-
-        @Override
-        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-        }
-
-        @Override
-        public void onCancelled(DatabaseError databaseError) {
-
-        }
-    };
-
     private ChildEventListener mEventListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -112,7 +84,7 @@ public class FavoriteActivity extends AppCompatActivity implements NavigationVie
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
             HashMap map = (HashMap) dataSnapshot.getValue();
-            
+
             //変更があったQuestionを探す
             for (Question question : mQuestionArrayList) {
                 if (dataSnapshot.getKey().equals(question.getQuestionUid())) {
@@ -132,6 +104,45 @@ public class FavoriteActivity extends AppCompatActivity implements NavigationVie
                     mAdapter.notifyDataSetChanged();
                 }
             }
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
+    private ChildEventListener mFavoriteListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            String favoriteQuestionUid = dataSnapshot.getKey();
+            mFavoriteArrayList.add(favoriteQuestionUid);
+
+            if(mFirst) {
+                //選択したジャンルにListenerを登録
+                if (mGenreRef != null) {
+                    mGenreRef.removeEventListener(mEventListener);
+                }
+
+                mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
+                mGenreRef.addChildEventListener(mEventListener);
+                mFirst = false;
+            }
+
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
         }
 
         @Override
@@ -190,32 +201,12 @@ public class FavoriteActivity extends AppCompatActivity implements NavigationVie
     protected void onResume() {
         super.onResume();
 
+
         //1を規定の選択
         if (mGenre == 0) {
             NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
             onNavigationItemSelected(navigationView.getMenu().getItem(0));
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -251,15 +242,23 @@ public class FavoriteActivity extends AppCompatActivity implements NavigationVie
 
         favoriteRef.addChildEventListener(mFavoriteListener);
 
-        //選択したジャンルにListenerを登録
-        if (mGenreRef != null) {
-            mGenreRef.removeEventListener(mEventListener);
-        }
-        mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
-        mGenreRef.addChildEventListener(mEventListener);
-
         return true;
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        //ここから
+        mQuestionArrayList.clear();
+        mAdapter.setQuestionArrayList(mQuestionArrayList);
+        mListView.setAdapter(mAdapter);
+        mFavoriteArrayList = new ArrayList<String>();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        DatabaseReference favoriteRef = mDatabaseReference.child(Const.FavoritePATH).child(user.getUid());
 
+        favoriteRef.addChildEventListener(mFavoriteListener);
+        //ここまで
+
+        Log.d("result", String.valueOf(resultCode));
+    }
 }
