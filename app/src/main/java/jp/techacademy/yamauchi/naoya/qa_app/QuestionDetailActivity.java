@@ -24,13 +24,11 @@ import static android.view.View.GONE;
 
 public class QuestionDetailActivity extends AppCompatActivity {
 
+    FloatingActionButton like;
     private ListView mListView;
     private Question mQuestion;
     private QuestionDetailListAdapter mAdapter;
-
     private ArrayList<String> mFavoriteArrayList;
-    FloatingActionButton like;
-
     private DatabaseReference mAnswerRef;
     private boolean mAlreadyLike = false;
     private boolean mFirst = true;
@@ -151,8 +149,8 @@ public class QuestionDetailActivity extends AppCompatActivity {
             }
         });
 
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-        mAnswerRef = databaseReference.child(Const.ContentsPATH)
+        DatabaseReference mDatabaseReference = FirebaseDatabase.getInstance().getReference();
+        mAnswerRef = mDatabaseReference.child(Const.ContentsPATH)
                 .child(String.valueOf(mQuestion.getGenre()))
                 .child(mQuestion.getQuestionUid())
                 .child(Const.AnswersPATH);
@@ -160,39 +158,55 @@ public class QuestionDetailActivity extends AppCompatActivity {
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-
         like = (FloatingActionButton) findViewById(R.id.like);
+        try {
+            Log.d("root", user.getUid());
 
-        try{
-            Log.d("root",user.getUid());
-
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             like.setVisibility(GONE);
         }
+
+        //firebase
+        mDatabaseReference = FirebaseDatabase.getInstance().getReference();
+
+        DatabaseReference favoriteRef =
+                mDatabaseReference
+                        .child(Const.FavoritePATH)
+                        .child(user.getUid())
+                        .child(mQuestion.getQuestionUid())
+                        .child(String.valueOf(mQuestion.getGenre()));
+
+        mFavoriteArrayList = new ArrayList<String>();
+        DatabaseReference favoriteDatabase = mDatabaseReference.child(Const.FavoritePATH).child(user.getUid());
+        favoriteDatabase.addChildEventListener(mFavoriteListener);
+
+
+        final DatabaseReference favoriteRefData =
+                mDatabaseReference
+                        .child(Const.FavoritePATH)
+                        .child(user.getUid())
+                        .child(mQuestion.getQuestionUid())
+                        .child(String.valueOf(mQuestion.getGenre()));
+
+
+        final DatabaseReference finalMDatabaseReference = mDatabaseReference;
         like.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DatabaseReference mDatabaseReference = FirebaseDatabase.getInstance().getReference();
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
 
                 if (!mAlreadyLike) {
-                    DatabaseReference favoriteRef =
-                            mDatabaseReference
-                                    .child(Const.FavoritePATH)
-                                    .child(user.getUid())
-                                    .child(mQuestion.getQuestionUid())
-                                    .child(String.valueOf(mQuestion.getGenre()));
 
                     Log.d("root", "未登録");
-                    favoriteRef.setValue(mQuestion.getQuestionUid());
+                    favoriteRefData.setValue(mQuestion.getQuestionUid());
                     //ログインしているときしか表示されないはずなので
                     Snackbar.make(v, "お気に入りに追加しました", Snackbar.LENGTH_LONG).show();
                     mAlreadyLike = true;
                     like.setImageResource(R.drawable.sudenilike);
                 } else {
                     DatabaseReference favoriteRef =
-                            mDatabaseReference
+                            finalMDatabaseReference
                                     .child(Const.FavoritePATH)
                                     .child(user.getUid())
                                     .child(mQuestion.getQuestionUid());
@@ -203,21 +217,9 @@ public class QuestionDetailActivity extends AppCompatActivity {
                     mAlreadyLike = false;
                     like.setImageResource(R.drawable.like);
                 }
-                //firebase
-                mDatabaseReference = FirebaseDatabase.getInstance().getReference();
-
-                DatabaseReference favoriteRef =
-                        mDatabaseReference
-                                .child(Const.FavoritePATH)
-                                .child(user.getUid())
-                                .child(mQuestion.getQuestionUid())
-                                .child(String.valueOf(mQuestion.getGenre()));
-
-                mFavoriteArrayList = new ArrayList<String>();
-                DatabaseReference favoriteDatabase = mDatabaseReference.child(Const.FavoritePATH).child(user.getUid());
-                favoriteDatabase.addChildEventListener(mFavoriteListener);
 
             }
+
 
         });
     }

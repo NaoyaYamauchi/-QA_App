@@ -150,7 +150,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-
         //firebase
         mDatabaseReference = FirebaseDatabase.getInstance().getReference();
 
@@ -194,9 +193,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 // ログインしていなければ、ドロワーにお気に入り一覧を表示しない
                 if (user == null) {
-                    item.setVisible(false);
+                    try {
+                        item.setVisible(false);
+                    } catch (NullPointerException e) {
+
+                    }
+
                 } else {
-                    item.setVisible(true);
+                    try {
+                        item.setVisible(true);
+                    } catch (NullPointerException e) {
+
+                    }
                 }
 
                 invalidateOptionsMenu();

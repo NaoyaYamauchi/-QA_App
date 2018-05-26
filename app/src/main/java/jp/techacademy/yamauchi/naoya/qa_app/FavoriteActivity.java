@@ -10,7 +10,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Base64;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -127,16 +126,15 @@ public class FavoriteActivity extends AppCompatActivity implements NavigationVie
             String favoriteQuestionUid = dataSnapshot.getKey();
             mFavoriteArrayList.add(favoriteQuestionUid);
 
-            if(mFirst) {
-                //選択したジャンルにListenerを登録
-                if (mGenreRef != null) {
-                    mGenreRef.removeEventListener(mEventListener);
-                }
 
-                mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
-                mGenreRef.addChildEventListener(mEventListener);
-                mFirst = false;
+            //選択したジャンルにListenerを登録
+            if (mGenreRef != null) {
+                mGenreRef.removeEventListener(mEventListener);
             }
+
+            mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
+            mGenreRef.addChildEventListener(mEventListener);
+
 
         }
 
