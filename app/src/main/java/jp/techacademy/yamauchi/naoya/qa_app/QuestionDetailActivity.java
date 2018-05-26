@@ -20,6 +20,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static android.view.View.GONE;
+
 public class QuestionDetailActivity extends AppCompatActivity {
 
     private ListView mListView;
@@ -27,6 +29,7 @@ public class QuestionDetailActivity extends AppCompatActivity {
     private QuestionDetailListAdapter mAdapter;
 
     private ArrayList<String> mFavoriteArrayList;
+    FloatingActionButton like;
 
     private DatabaseReference mAnswerRef;
     private boolean mAlreadyLike = false;
@@ -40,9 +43,11 @@ public class QuestionDetailActivity extends AppCompatActivity {
             for (int i = 0; i < mFavoriteArrayList.size(); i++) {
                 if (mQuestion.getQuestionUid().equals(mFavoriteArrayList.get(i))) {
                     mAlreadyLike = true;
+                    like.setImageResource(R.drawable.sudenilike);
                     break;
                 } else {
                     mAlreadyLike = false;
+                    like.setImageResource(R.drawable.like);
                 }
             }
             Log.d("root", mQuestion.getQuestionUid());
@@ -155,21 +160,15 @@ public class QuestionDetailActivity extends AppCompatActivity {
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-        //firebase
-        DatabaseReference mDatabaseReference = FirebaseDatabase.getInstance().getReference();
 
-        DatabaseReference favoriteRef =
-                mDatabaseReference
-                        .child(Const.FavoritePATH)
-                        .child(user.getUid())
-                        .child(mQuestion.getQuestionUid())
-                        .child(String.valueOf(mQuestion.getGenre()));
+        like = (FloatingActionButton) findViewById(R.id.like);
 
-        mFavoriteArrayList = new ArrayList<String>();
-        DatabaseReference favoriteDatabase = mDatabaseReference.child(Const.FavoritePATH).child(user.getUid());
-        favoriteDatabase.addChildEventListener(mFavoriteListener);
+        try{
+            Log.d("root",user.getUid());
 
-        FloatingActionButton like = (FloatingActionButton) findViewById(R.id.like);
+        }catch (RuntimeException e){
+            like.setVisibility(GONE);
+        }
         like.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -190,6 +189,7 @@ public class QuestionDetailActivity extends AppCompatActivity {
                     //ログインしているときしか表示されないはずなので
                     Snackbar.make(v, "お気に入りに追加しました", Snackbar.LENGTH_LONG).show();
                     mAlreadyLike = true;
+                    like.setImageResource(R.drawable.sudenilike);
                 } else {
                     DatabaseReference favoriteRef =
                             mDatabaseReference
@@ -201,9 +201,24 @@ public class QuestionDetailActivity extends AppCompatActivity {
                     Snackbar.make(v, "お気に入りから削除しました", Snackbar.LENGTH_LONG).show();
                     Log.d("root", "登録済み");
                     mAlreadyLike = false;
+                    like.setImageResource(R.drawable.like);
                 }
+                //firebase
+                mDatabaseReference = FirebaseDatabase.getInstance().getReference();
+
+                DatabaseReference favoriteRef =
+                        mDatabaseReference
+                                .child(Const.FavoritePATH)
+                                .child(user.getUid())
+                                .child(mQuestion.getQuestionUid())
+                                .child(String.valueOf(mQuestion.getGenre()));
+
+                mFavoriteArrayList = new ArrayList<String>();
+                DatabaseReference favoriteDatabase = mDatabaseReference.child(Const.FavoritePATH).child(user.getUid());
+                favoriteDatabase.addChildEventListener(mFavoriteListener);
 
             }
+
         });
     }
 }

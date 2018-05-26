@@ -149,14 +149,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
         });
-        //ナビゲーションドロワーの設定
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, mToolbar, R.string.app_name, R.string.app_name);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
 
         //firebase
         mDatabaseReference = FirebaseDatabase.getInstance().getReference();
@@ -181,20 +174,59 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onResume() {
         super.onResume();
+//ナビゲーションドロワーの設定
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 
         //1を規定の選択
         if (mGenre == 0) {
             NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
             onNavigationItemSelected(navigationView.getMenu().getItem(0));
+
         }
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, mToolbar, R.string.app_name, R.string.app_name) {
+
+            public void onDrawerOpened(View drawerView) {
+                NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+                Menu menu = navigationView.getMenu();
+                MenuItem item = menu.findItem(R.id.action_favorite);
+
+                // ログイン済みのユーザーを取得する
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                // ログインしていなければ、ドロワーにお気に入り一覧を表示しない
+                if (user == null) {
+                    item.setVisible(false);
+                } else {
+                    item.setVisible(true);
+                }
+
+                invalidateOptionsMenu();
+            }
+        };
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        invalidateOptionsMenu();
+
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        try {
+            Log.d("user", user.getUid());
+            getMenuInflater().inflate(R.menu.menu_main, menu);
+            return true;
+
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

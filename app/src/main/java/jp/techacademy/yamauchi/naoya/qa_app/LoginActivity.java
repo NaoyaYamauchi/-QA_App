@@ -56,8 +56,7 @@ public class LoginActivity extends AppCompatActivity {
         mCreateAccountListener = new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(Task<AuthResult> task) {
-                Log.d("ERROR", task.getResult().toString());
-                if (task.isSuccessful()) {
+                 if (task.isSuccessful()) {
                     //成功時、ログインを行う
                     String email = mEmailEditText.getText().toString();
                     String password = mPasswordEditText.getText().toString();
@@ -76,7 +75,6 @@ public class LoginActivity extends AppCompatActivity {
         mLoginListener = new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(Task<AuthResult> task) {
-                Log.d("ERROR", task.getResult().toString());
                 if (task.isSuccessful()) {
                     //成功した場合
                     FirebaseUser user = mAuth.getCurrentUser();
